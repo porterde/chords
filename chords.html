@@ -1,0 +1,131 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <title>Random chords</title>
+    </head>
+    <body>
+        <div class="container mx-auto text-center h-screen flex flex-col justify-around">
+            <h1 class="text-2xl">
+                Random chords
+            </h1>
+
+            <div id="list" class="text-xl">
+            </div>
+
+            <div>
+                <h2>
+                    Now
+                </h2>
+
+                <div id="chord" class="text-8xl"></div>
+                <div id="dynamic" class="text-4xl"></div>
+            </div>
+
+            <div>
+                <h2>
+                    Next
+                </h2>
+
+                <div id="nextChord" class="text-8xl"></div>
+                <div id="nextDynamic" class="text-4xl"></div>
+            </div>
+
+            <div id="beats" class="text-8xl"></div>
+
+            <button id="run" onclick="run()">Start</button>
+        </div>
+
+        <script lang="javascript">
+            const chordElement = document.getElementById('chord');
+            const nextChordElement = document.getElementById('nextChord');
+            const dynamicElement = document.getElementById('dynamic');
+            const nextDynamicElement = document.getElementById('nextDynamic');
+            const beatsElement = document.getElementById('beats');
+            const runButton = document.getElementById('run');
+
+            const notes = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'A♯', 'C♯', 'D♯', 'F♯', 'G♯', 'A♭', 'B♭', 'D♭', 'E♭', 'G♭'];
+            const chords = ['', 'm', 'sus', '+', 'aug', '6', 'm6', '7', '9', 'maj7', 'maj9', 'm7', 'm9', 'dim7', '°']; // 'add9', 'm7b5'
+            const dynamics = ['p', 'mf', 'f'];
+
+            var beats = 4;
+            var beat = 1;
+            var bpm = 60;
+
+            var chord = 'A';
+            var nextChord = 'B';
+            var dynamic = 'mf';
+            var nextDynamic = 'mf';
+
+            var interval;
+
+            var context = new AudioContext();
+
+            function click() {
+                const oscillator = context.createOscillator();
+                const gain = context.createGain();
+                gain.gain.value = 0.1;
+                oscillator.connect(gain);
+                gain.connect(context.destination);
+                oscillator.start(context.currentTime);
+                oscillator.stop(context.currentTime + 0.01);
+            }
+
+            function random(list) {
+                return list[Math.floor(Math.random() * list.length)];
+            }
+
+            function updateChordsAndDynamics() {
+                chordElement.innerText = chord;
+                nextChordElement.innerText = nextChord;
+                dynamicElement.innerText = dynamic;
+                nextDynamicElement.innerText = nextDynamic;
+            }
+
+            function updateBeat() {
+                beatsElement.innerText = `${beat} / ${beats}`;
+            }
+
+            function run() {
+                if (interval) {
+                    clearInterval(interval);
+                    interval = null;
+                    runButton.innerText = "Start";
+                    return;
+                }
+
+                runButton.innerText = "Stop";
+
+                interval = setInterval(function () {
+                    beat++;
+                    if (beat > beats) {
+                        beat = 1;
+
+                        chord = nextChord;
+                        nextChord = random(notes) + random(chords);
+
+                        dynamic = nextDynamic;
+                        nextDynamic = random(dynamics);
+
+                        updateChordsAndDynamics();
+                    }
+
+                    updateBeat();
+                    click();
+                }, 60 * 1000 / bpm);
+            }
+
+            updateChordsAndDynamics();
+            updateBeat();
+
+            const list = document.getElementById('list');
+            for (var i=0; i<30; i++) {
+                const chord = random(notes) + random(chords);
+                const p = document.createElement('p');
+                p.innerText = chord;
+                list.appendChild(p);
+            }
+        </script>
+    </body>
+</html>
